@@ -377,6 +377,18 @@ SELECT * FROM evaluation;
 
 SELECT * FROM LiveSession;
 
+SELECT * -- Retrieve all live sessions that are currently active
+FROM LiveSession 
+WHERE session_status = 'active';
+
+SELECT * -- Retrieve all exams conducted by a specific user (exam conductor ID = 3):
+fROM Examination 
+WHERE examination_conductor_user_id = 3;
+
+-- Get the total number of students who have taken a specific exam (exam_id = 1):
+SELECT COUNT(DISTINCT student_user_id) AS total_students 
+FROM UserResponses 
+WHERE exam_id = 1;
 
 SELECT -- list of all students and their details
     s.student_id, s.name, s.gender, s.date_of_birth, s.address, u.official_email_id
@@ -437,28 +449,21 @@ JOIN
 WHERE 
     s.student_id = 2;
 
- 
+ -- Get the question paper details and their setter for each exam
+SELECT Examination.exam_id, QuestionPaper.question_paper_title, QuestionPaper.question_paper_setter_id, USER.official_email_id 
+FROM Examination 
+JOIN QuestionPaper ON Examination.question_paper_id = QuestionPaper.question_paper_id
+JOIN USER ON QuestionPaper.question_paper_setter_id = USER.user_id;
 
-SELECT 
-    ur.student_user_id, 
-    s.name, 
-    COUNT(*) * (MAX(qp.max_score) / NULLIF(COUNT(DISTINCT ca.question_id), 0)) AS student_score
-FROM 
-    UserResponses ur
-JOIN 
-    CorrectAnswers ca ON ur.question_id = ca.question_id
-JOIN 
-    Question q ON ur.question_id = q.question_id
-JOIN 
-    QuestionPaper qp ON q.question_paper_id = qp.question_paper_id
-JOIN 
-    Student s ON ur.student_user_id = s.student_id
-WHERE 
-    ur.selected_option_label = ca.correct_option_label
-    AND ur.student_user_id = 2
-GROUP BY 
-    ur.student_user_id, s.name;
+-- Get the highest score in a specific exam (exam_id = 4):
+SELECT MAX(score) AS highest_score 
+FROM Evaluation 
+WHERE exam_id = 4;
 
+-- Get the average score of all students in a specific exam (exam_id = 2):
+SELECT AVG(score) AS average_score 
+FROM Evaluation 
+WHERE exam_id = 2;
 
 
 SELECT -- list of all live session exam
@@ -491,10 +496,10 @@ WHERE
     qp.question_paper_title = 'DSD';  
     
     
-     SELECT  -- total marks obtained by all students in a specific exam and compares it with the maximum possible score for that exam.
-    SUM(e.score_with_respect_to_max_score) AS total_marks_obtained,
-    COUNT(e.student_user_id) AS total_students,
-    qp.max_score * COUNT(e.student_user_id) AS total_possible_score
+SELECT  -- total marks obtained by all students in a specific exam and compares it with the maximum possible score for that exam.
+SUM(e.score_with_respect_to_max_score) AS total_marks_obtained,
+COUNT(e.student_user_id) AS total_students,
+qp.max_score * COUNT(e.student_user_id) AS total_possible_score
 FROM 
     Evaluation e
 JOIN 
@@ -520,3 +525,4 @@ WHERE
         FROM Evaluation
         WHERE exam_id = 1
     );
+
